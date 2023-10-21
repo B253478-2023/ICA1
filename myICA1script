@@ -2,87 +2,83 @@
 
         #using fastqc to perform a quality check
 	#需改进，让用户输入地址
-#fastqc -o . /localdisk/data/BPSM/ICA1/fastq/*.fq.gz
+fastqc -o . /localdisk/data/BPSM/ICA1/fastq/*.fq.gz
 	#summary the check result
-#echo "FastQC Summary Results" > fastqc_summary_results.txt
-#echo "-------------------------" >> fastqc_summary_results.txt
+echo "FastQC Summary Results" > fastqc_summary_results.txt
+echo "-------------------------" >> fastqc_summary_results.txt
 	#interating through zipfiles
-#for zipfile in *.zip; do
+for zipfile in *.zip; do
 	#unzip the summary.txt
-#	unzip -p "$zipfile" "*/summary.txt" > temp_summary.txt
+	unzip -p "$zipfile" "*/summary.txt" > temp_summary.txt
 	#count the number of each qaulity
-#	PASS_COUNT=$(grep -c "PASS" temp_summary.txt)
-#	WARN_COUNT=$(grep -c "WARN" temp_summary.txt)
-#	FAIL_COUNT=$(grep -c "FAIL" temp_summary.txt)
+	PASS_COUNT=$(grep -c "PASS" temp_summary.txt)
+	WARN_COUNT=$(grep -c "WARN" temp_summary.txt)
+	FAIL_COUNT=$(grep -c "FAIL" temp_summary.txt)
 	#print the count number
-#	echo "File: $zipfile" >> fastqc_summary_results.txt
-#	echo "PASS count: $PASS_COUNT" >> fastqc_summary_results.txt
-#	echo "WARN count: $WARN_COUNT" >> fastqc_summary_results.txt
-#	echo "FAIL count: $FAIL_COUNT" >> fastqc_summary_results.txt
-#	echo "-------------------------" >> fastqc_summary_results.txt
-#done
+	echo "File: $zipfile" >> fastqc_summary_results.txt
+	echo "PASS count: $PASS_COUNT" >> fastqc_summary_results.txt
+	echo "WARN count: $WARN_COUNT" >> fastqc_summary_results.txt
+	echo "FAIL count: $FAIL_COUNT" >> fastqc_summary_results.txt
+	echo "-------------------------" >> fastqc_summary_results.txt
+done
 	#delete the temp file
-#rm -f temp_summary.txt
+rm -f temp_summary.txt
 	#finish fastq
 
 	#start bowtie2
 	#需改进，用户输入地址
-#bowtie2-build /localdisk/data/BPSM/ICA1/Tcongo_genome/* Tcongo_index
+bowtie2-build /localdisk/data/BPSM/ICA1/Tcongo_genome/* Tcongo_index
 [ ! -d "bowtie2_result" ] && mkdir bowtie2_result
 	#遍历样本
-#for sample in /localdisk/data/BPSM/ICA1/fastq/*_1.fq.gz; do
+for sample in /localdisk/data/BPSM/ICA1/fastq/*_1.fq.gz; do
 	#get the name of pairs
-#	name=$(basename "$sample" _1.fq.gz)
-#	sample2="$sample_path/${name}_2.fq.gz"
-#	bowtie2 -x Tcongo_index -1 "$sample" -2 "$sample2" -S "./bowtie2_result/${name}.sam"
-#done
+	name=$(basename "$sample" _1.fq.gz)
+	sample2="$sample_path/${name}_2.fq.gz"
+	bowtie2 -x Tcongo_index -1 "$sample" -2 "$sample2" -S "./bowtie2_result/${name}.sam"
+done
 	#finish bowtie2
 
 	#convering the output to indexed "bam" format with samtools
-#	echo "samtools is creating indexed bam format"
+echo "samtools is creating indexed bam format"
 	#creat a dirctory for outputs
 [ ! -d "bam" ] && mkdir bam
 	#Iterating through samfiles
-#for samfile in ./bowtie2_result/*.sam; do
+for samfile in ./bowtie2_result/*.sam; do
 	#get the name  of samfiles
-#	samname=$(basename "$samfile" .sam)
-#	samtools view -bS "${samfile}" > "./bam/${samname}.bam"
-#	#sort for bamfiles
-#	samtools sort "./bam/${samname}.bam" -o "./bam/${samname}_sorted.bam"
+	samname=$(basename "$samfile" .sam)
+	samtools view -bS "${samfile}" > "./bam/${samname}.bam"
+	#sort for bamfiles
+	samtools sort "./bam/${samname}.bam" -o "./bam/${samname}_sorted.bam"
 	# creat index for bamfiles
-#	samtools index "./bam/${samname}_sorted.bam"
-#done
-#	echo "samtools has finish its works"
+	samtools index "./bam/${samname}_sorted.bam"
+done
+echo "samtools has finish its works"
 	#finish samtools
 
 	#start bedtools
 	#get the path of bed file
 bed_path="/localdisk/data/BPSM/ICA1/TriTrypDB-46_TcongolenseIL3000_2019.bed"
 	#creat a dirctory for outputs
-#[ ! -d "bed_counts" ] && mkdir bed_counts
+[ ! -d "bed_counts" ] && mkdir bed_counts
 	#interating through bamfiles
-#for bamfile in ./bam/*_sorted.bam; do
-#	bamname=$(basename "$bamfile" _sorted.bam)
-#	bedtools multicov -bams "$bamfile" -bed "$bed_path" > "./bed_counts/${bamname}_counts.txt"
-#done
-#	echo "Congratulation! the number data genarated in bed_counts folder"
+for bamfile in ./bam/*_sorted.bam; do
+	bamname=$(basename "$bamfile" _sorted.bam)
+	bedtools multicov -bams "$bamfile" -bed "$bed_path" > "./bed_counts/${bamname}_counts.txt"
+done
+echo "Congratulation! the number data genarated in bed_counts folder"
 	#finish bedtools
 
 	#divide in groups
-#detail_path="/localdisk/data/BPSM/ICA1/fastq/Tco2.fqfiles"
-#while IFS=$'\t' read -r SampleName SampleType Replicate Time Treatment End1 End2; do
-#	if [ "$SampleName" != "SampleName" ] ; then
-#		group_name="${SampleType}_${Treatment}_${Time}"
-#		[ ! -d "./bed_counts/$group_name" ] && mkdir "./bed_counts/$group_name"
-#		files_name="$(echo $SampleName | cut -c 1-3)-$(echo $SampleName | cut -c4-)"
-#		mv "./bed_counts/${files_name}_counts.txt" "./bed_counts/$group_name"
-#	fi
-#done < "$detail_path"
+detail_path="/localdisk/data/BPSM/ICA1/fastq/Tco2.fqfiles"
+while IFS=$'\t' read -r SampleName SampleType Replicate Time Treatment End1 End2; do
+	if [ "$SampleName" != "SampleName" ] ; then
+		group_name="${SampleType}_${Treatment}_${Time}"
+		[ ! -d "./bed_counts/$group_name" ] && mkdir "./bed_counts/$group_name"
+		files_name="$(echo $SampleName | cut -c 1-3)-$(echo $SampleName | cut -c4-)"
+		mv "./bed_counts/${files_name}_counts.txt" "./bed_counts/$group_name"
+	fi
+done < "$detail_path"
 	#finish divide in groups
-
-
-#need to optimize this module###########################################################
-#which group?
 
 	#start generate statistical mean of the counts
 counts_path="./bed_counts"
@@ -112,19 +108,16 @@ done
 	#generate the fold change
 mean_path="./mean_counts"
 [ ! -d "fold_changes" ] && mkdir fold_changes
-for group1 in $mean_path/*; do
-	group1_name=$(basename $group1)
-        group1_type=$(echo $group1_name | cut -d "_" -f 1)
-        group1_treat=$(echo $group1_name | cut -d "_" -f 2)
-        group1_time=$(echo $group1_name | cut -d "_" -f 3)
-#echo "$group1_type" "$group1_treat" "$group1_time"
+for group1 in "$mean_path"/*; do
+	group1_name=$(basename "$group1")
+        group1_type=$(echo "$group1_name" | cut -d "_" -f 1)
+        group1_treat=$(echo "$group1_name" | cut -d "_" -f 2)
+        group1_time=$(echo "$group1_name" | cut -d "_" -f 3)
 	for group2 in $mean_path/*; do
-		group2_name=$(basename $group2)
-        	group2_type=$(echo $group2_name | cut -d "_" -f 1)
-		group2_treat=$(echo $group2_name | cut -d "_" -f 2)
-        	group2_time=$(echo $group2_name | cut -d "_" -f 3)
-#echo "$group2_type" "$group2_treat" "$group2_time"
-
+		group2_name=$(basename "$group2")
+        	group2_type=$(echo "$group2_name" | cut -d "_" -f 1)
+		group2_treat=$(echo "$group2_name" | cut -d "_" -f 2)
+        	group2_time=$(echo "$group2_name" | cut -d "_" -f 3)
 ####first situation##############################
 		if [[ "$group1_type" == "$group2_type" ]] && [[ "$group1_treat" == "$group2_treat" ]] && [[ "$group1_time" != "$group2_time" ]]
 		then
@@ -143,29 +136,14 @@ for group1 in $mean_path/*; do
 
 			fi
 
-			[ ! -d "$fold_path" ] && mkdir $fold_path
+			[ ! -d "$fold_path" ] && mkdir "$fold_path"
 
-#			if [ ! -f "${fold_path}/${fold_name}_fold_changes.txt" ]
-#			then
-				awk '
-					BEGIN {FS="\t"}
-					NR==FNR {gene1_counts[$1"\t"$2"\t"$3"\t"$4]=$NF; next}
-					{
-					if (gene1_counts[$1"\t"$2"\t"$3"\t"$4] == 0) {
-						fold_change = "INF";
-					} else {
-						fold_change= $NF / gene1_counts[$1"\t"$2"\t"$3"\t"$4];
-					}
-					 print $1"\t"$2"\t"$3"\t"$4"\t"fold_change}
-				' $group1_path $group2_path > "${fold_path}/temp_fold_changes.txt"
-#head "${fold_path}/temp_fold_changes.txt"
-				awk '
-					BEGIN {FS="\t"}
-					NR==FNR { gene_desc[$1"\t"$2"\t"$3"\t"$4]=$NF; next}
-					{print $1"\t"$2"\t"$3"\t"$4"\t"gene_desc[$1"\t"$2"\t"$3"\t"$4]"\t"$5}
-				' $bed_path "${fold_path}/temp_fold_changes.txt" | sort -t$'\t' -k6,6nr > "${fold_path}/${fold_name}_fold_changes.txt"
-				rm -f "${fold_path}/temp_fold_changes.txt"
-#			fi
+			awk '
+				BEGIN {FS="\t"}
+				NR==FNR {gene1_counts[$1"\t"$2"\t"$3"\t"$4]=$NF; next}
+				{fold_change=log(($NF+1)/(gene1_counts[$1"\t"$2"\t"$3"\t"$4]+1))/log(2);
+				 print $4"\t"$5"\t"fold_change}
+			' "$group1_path" "$group2_path" | sort -t$'\t' -k3,3nr > "${fold_path}"/"${fold_name}"_fold_changes.txt
 
 ####second situation#############################
                 elif [[ "$group1_type" != "$group2_type" ]] && [[ "$group1_treat" == "$group2_treat" ]] && [[ "$group1_time" == "$group2_time" ]]
@@ -198,29 +176,14 @@ for group1 in $mean_path/*; do
 
 			fi
 
-                        [ ! -d "$fold_path" ] && mkdir $fold_path
+                        [ ! -d "$fold_path" ] && mkdir "$fold_path"
 
-#                        if [ ! -f "${fold_path}/${fold_name}_fold_changes.txt" ]
-#                        then
-                                awk '
-                                        BEGIN {FS="\t"}
-                                        NR==FNR {gene1_counts[$1"\t"$2"\t"$3"\t"$4]=$NF; next}
-                                        {
-                                        if (gene1_counts[$1"\t"$2"\t"$3"\t"$4] == 0) {
-                                                fold_change = "INF";
-                                        } else {
-                                                fold_change= $NF / gene1_counts[$1"\t"$2"\t"$3"\t"$4];
-                                        }
-                                         print $1"\t"$2"\t"$3"\t"$4"\t"fold_change}
-                                ' $group1_path $group2_path > "${fold_path}/temp_fold_changes.txt"
-#head "${fold_path}/temp_fold_changes.txt"
-                                awk '
-                                        BEGIN {FS="\t"}
-                                        NR==FNR { gene_desc[$1"\t"$2"\t"$3"\t"$4]=$NF; next}
-                                        {print $1"\t"$2"\t"$3"\t"$4"\t"gene_desc[$1"\t"$2"\t"$3"\t"$4]"\t"$5}
-                                ' $bed_path "${fold_path}/temp_fold_changes.txt" | sort -t$'\t' -k6,6nr > "${fold_path}/${fold_name}_fold_changes.txt"
-                                rm -f "${fold_path}/temp_fold_changes.txt"
-#			fi
+			awk '
+				BEGIN {FS="\t"}
+                                NR==FNR {gene1_counts[$1"\t"$2"\t"$3"\t"$4]=$NF; next}
+                                {fold_change=log(($NF+1)/(gene1_counts[$1"\t"$2"\t"$3"\t"$4]+1))/log(2);
+                                print $4"\t"$5"\t"fold_change}
+                        ' "$group1_path" "$group2_path" | sort -t$'\t' -k3,3nr > "${fold_path}"/"${fold_name}"_fold_changes.txt
 
 ####third situation#################################
                 elif [[ "$group1_type" == "$group2_type" ]] && [[ "$group1_treat" != "$group2_treat" ]] && [[ "$group1_time" == "$group2_time" ]]
@@ -240,33 +203,17 @@ for group1 in $mean_path/*; do
 
                         fi
 
-                        [ ! -d "$fold_path" ] && mkdir $fold_path
+                        [ ! -d "$fold_path" ] && mkdir "$fold_path"
 
-#                        if [ ! -f "${fold_path}/${fold_name}_fold_changes.txt" ]
-#                        then
-                                awk '
-                                        BEGIN {FS="\t"}
-                                        NR==FNR {gene1_counts[$1"\t"$2"\t"$3"\t"$4]=$NF; next}
-                                        {
-                                        if (gene1_counts[$1"\t"$2"\t"$3"\t"$4] == 0) {
-                                                fold_change = "INF";
-                                        } else {
-                                                fold_change= $NF / gene1_counts[$1"\t"$2"\t"$3"\t"$4];
-                                        }
-                                         print $1"\t"$2"\t"$3"\t"$4"\t"fold_change}
-                                ' $group1_path $group2_path > "${fold_path}/temp_fold_changes.txt"
-#head "${fold_path}/temp_fold_changes.txt"
-                                awk '
-                                        BEGIN {FS="\t"}
-                                        NR==FNR { gene_desc[$1"\t"$2"\t"$3"\t"$4]=$NF; next}
-                                        {print $1"\t"$2"\t"$3"\t"$4"\t"gene_desc[$1"\t"$2"\t"$3"\t"$4]"\t"$5}
-                                ' $bed_path "${fold_path}/temp_fold_changes.txt" | sort -t$'\t' -k6,6nr > "${fold_path}/${fold_name}_fold_changes.txt"
-                                rm -f "${fold_path}/temp_fold_changes.txt"
-#                       fi
+                        awk '
+				BEGIN {FS="\t"}
+                                NR==FNR {gene1_counts[$1"\t"$2"\t"$3"\t"$4]=$NF; next}
+                                {fold_change=log(($NF+1)/(gene1_counts[$1"\t"$2"\t"$3"\t"$4]+1))/log(2);
+                                print $4"\t"$5"\t"fold_change}
+                        ' "$group1_path" "$group2_path" | sort -t$'\t' -k3,3nr > "${fold_path}"/"${fold_name}"_fold_changes.txt
 
+		fi
 ####all three situation have been considered#########
-                fi
-
 	done
 	#second interating finished
 done
