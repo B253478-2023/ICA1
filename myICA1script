@@ -1,16 +1,44 @@
 #!/usr/bin/bash
 
 # Defining paths to required directories and files
-# Improvement needed: Let the user input the output path
+#User can enter the path they need
+#Or they can press ENTER to read the default path
 
 # Path to the directory containing raw sequence read files (.fq.gz format)
-sample_path="/localdisk/data/BPSM/ICA1/fastq"
+echo "--------------------------------------"
+echo "Please enter the path of the DIRECTORY containing raw sequence read files (.fq.gz format):"
+echo "Pressing Enter will read the default path: /localdisk/data/BPSM/ICA1/fastq"
+read sample_path
+if [ -z "$sample_path" ]; then
+	sample_path="/localdisk/data/BPSM/ICA1/fastq"
+fi
+
 # Path to the BED format file.
-bed_path="/localdisk/data/BPSM/ICA1/TriTrypDB-46_TcongolenseIL3000_2019.bed"
+echo "--------------------------------------"
+echo "Please enter the path of the BED format FILE (.bed format):"
+echo "Pressing Enter will read the default path: /localdisk/data/BPSM/ICA1/TriTrypDB-46_TcongolenseIL3000_2019.bed"
+read bed_path
+if [ -z "$bed_path" ]; then
+	bed_path="/localdisk/data/BPSM/ICA1/TriTrypDB-46_TcongolenseIL3000_2019.bed"
+fi
+
 # Path to a sample details file which contains sample groups information.
-detail_path="/localdisk/data/BPSM/ICA1/fastq/Tco2.fqfiles"
+echo "--------------------------------------"
+echo "Please enter the the path of the sample details file which contains sample group information format file (.fqfiles format):"
+echo "Pressing Enter will read the default path: /localdisk/data/BPSM/ICA1/fastq/Tco2.fqfiles"
+read detail_path
+if [ -z "$detail_path" ]; then
+	detail_path="/localdisk/data/BPSM/ICA1/fastq/Tco2.fqfiles"
+fi
+
 # Path to the directory containing the gene sequence file.
-index_path="/localdisk/data/BPSM/ICA1/Tcongo_genome"
+echo "--------------------------------------"
+echo "Please enter the the path of the DIRECTORY which contains the gene sequence file (.fasta.gz format):"
+echo "Pressing Enter will read the default path: /localdisk/data/BPSM/ICA1/Tcongo_genome"
+read index_path
+if [ -z "$index_path" ]; then
+	index_path="/localdisk/data/BPSM/ICA1/Tcongo_genome"
+fi
 
 #### Quality check using FastQC tool
 # Create an output directory if it doesn't exist
