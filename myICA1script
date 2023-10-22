@@ -46,7 +46,6 @@ rm -f "$fastqc_output"/temp_summary.txt
 #### End of FastQC quality check
 
 #### Start mapping sequence reads to reference genome using Bowtie2
-
 # Create output directory for Bowtie2 results if it doesn't exist
 bowtie2_output="./bowtie2_result"
 [ ! -d "bowtie2_result" ] && mkdir "$bowtie2_output"
@@ -61,13 +60,14 @@ for sample in "$sample_path"/*_1.fq.gz; do
 	name=$(basename "$sample" _1.fq.gz)
 	sample2="$sample_path/${name}_2.fq.gz"
 	# Map the paired reads to the genome and save the output as a SAM file
-	bowtie2 -x Tcongo_index -1 "$sample" -2 "$sample2" -S "${bowtie2_output}/${name}.sam"
+	bowtie2 -x "$bowtie2_output"/Tcongo_index -1 "$sample" -2 "$sample2" -S "${bowtie2_output}/${name}.sam"
 done
 #### End of Bowtie2 mapping
 
 #### Converting SAM file outputs from Bowtie2 to indexed BAM format using Samtools
-echo "Samtools is creating indexed bam format"
 echo "---------------------------------------"
+echo "Samtools is creating indexed bam format"
+echo "......"
 
 # Create a directory to store the BAM files if it doesn't exist
 [ ! -d "bam" ] && mkdir bam
@@ -84,11 +84,13 @@ for samfile in ${bowtie2_output}/*.sam; do
 	samtools index "./bam/${samname}_sorted.bam"
 done
 echo "Samtools has finished its works in bam folder"
+echo " "
 #### End of Samtools
 
 #### Begin Bedtools analysis
-echo "Bedtools is genareting the number data"
 echo "--------------------------------------"
+echo "Bedtools is genareting the number data"
+echo "......"
 
 # Create a directory for the Bedtools outputs if it doesn't exist
 [ ! -d "bed_counts" ] && mkdir bed_counts
@@ -100,6 +102,7 @@ for bamfile in ./bam/*_sorted.bam; do
 	bedtools multicov -bams "$bamfile" -bed "$bed_path" > "./bed_counts/${bamname}_counts.txt"
 done
 echo "Congratulation! the number data genarated in bed_counts folder"
+echo " "
 ####finish Bedtools analysis
 
 #### Organizing the Bedtools outputs into groups based on data in 'detail_path' file
@@ -114,15 +117,17 @@ while IFS=$'\t' read -r SampleName SampleType Replicate Time Treatment End1 End2
 		# Generate a unique file name based on SampleName
 		files_name="$(echo $SampleName | cut -c 1-3)-$(echo $SampleName | cut -c4-)"
 		# Move the corresponding count file to its group directory
-		mv "./bed_counts/${files_name}_counts.txt" "./bed_counts/$group_name"
+		mv -f "./bed_counts/${files_name}_counts.txt" "./bed_counts/$group_name"
 	fi
 done < "$detail_path"
 #### End of organizing groups
 
 
 #### Begin generating statistical mean of the counts across samples in a group
+echo "------------------------------------------------------"
 echo "I'm generating statistical mean of the counts for you!"
-echo "-----------------------------------------------------"
+echo "......"
+
 #Prepare for the input of counts numbers
 counts_path="./bed_counts"
 
@@ -154,11 +159,13 @@ for group in $counts_path/*; do
 done
 
 echo "Statistical mean of the counts have been generated!"
+echo " "
 #### End of generating mean counts
 
 #### Initialize the process of calculating fold changes for the data.
-echo "I'm calculating the fold changes"
 echo "--------------------------------"
+echo "I'm calculating the fold changes"
+echo "......"
 
 # Define the path to the mean counts data.
 mean_path="./mean_counts"
